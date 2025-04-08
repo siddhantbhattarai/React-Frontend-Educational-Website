@@ -9,6 +9,9 @@ on:
 jobs:
   sonarqube-scan:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./sonarqube-scans
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -34,16 +37,23 @@ jobs:
             -Dsonar.projectName="DevSecOps Educational Website"
             -Dsonar.projectVersion=1.0.3
             -Dsonar.sources=.
-            -Dsonar.language=java
             -Dsonar.java.binaries=target
             -Dsonar.sourceEncoding=UTF-8
             -Dsonar.exclusions=**/test/**
 
   trivy-scan:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./trivy-scans
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Clean workspace
+        run: |
+          rm -f trivy_envs.txt || true
+          rm -rf .trivy* || true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -58,3 +68,10 @@ jobs:
           format: 'table'
           exit-code: '1'
           severity: 'CRITICAL,HIGH'
+          cache-dir: /tmp/trivy-cache
+          skip-files: trivy_envs.txt
+
+      - name: Post-cleanup
+        run: |
+          docker rmi educational-website || true
+          rm -f trivy_envs.txt || true
