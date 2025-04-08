@@ -10,31 +10,51 @@ jobs:
   sonarqube-scan:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Java
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        
-    - name: SonarQube Scan
-      uses: sonarsource/sonarqube-scan-action@master
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Test SonarQube Connection
+        run: curl -I "${{ secrets.SONAR_HOST_URL }}/api/system/status"
+
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          projectBaseDir: ./
+          args: >
+            -Dsonar.projectKey=devsecops_edu_platform
+            -Dsonar.projectName="DevSecOps Educational Website"
+            -Dsonar.projectVersion=1.0.3
+            -Dsonar.sources=.
+            -Dsonar.language=java
+            -Dsonar.java.binaries=target
+            -Dsonar.sourceEncoding=UTF-8
+            -Dsonar.exclusions=**/test/**
 
   trivy-scan:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Build Docker image
-      run: docker build -t educational-website .
-      
-    - name: Scan container with Trivy
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: 'educational-website'
-        format: 'table'
-        exit-code: '1'
-        severity: 'CRITICAL,HIGH'
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker build -t educational-website .
+
+      - name: Scan container with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'educational-website'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
