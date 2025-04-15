@@ -1,4 +1,4 @@
-name: DevSecOps CRA Deployment Pipeline
+name: DevSecOps Deployment Pipeline
 
 on:
   push:
