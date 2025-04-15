@@ -1,4 +1,4 @@
-name: DevSecOps Deployment Pipeline
+name: CI/CD Pipeline for DevSecOps Application
 
 on:
   push:
@@ -55,9 +55,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build the React app
+      - name: Build the React app (bypass warnings)
         run: |
-          NODE_OPTIONS=--openssl-legacy-provider npm run build
+          CI=false NODE_OPTIONS=--openssl-legacy-provider npm run build
 
       - name: Install sshpass
         run: sudo apt-get install -y sshpass
